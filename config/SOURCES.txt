@@ -1,0 +1,8 @@
+README.md
+setup.py
+onlyfiles.egg-info/PKG-INFO
+onlyfiles.egg-info/SOURCES.txt
+onlyfiles.egg-info/dependency_links.txt
+onlyfiles.egg-info/entry_points.txt
+onlyfiles.egg-info/requires.txt
+onlyfiles.egg-info/top_level.txt

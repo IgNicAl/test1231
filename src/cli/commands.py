@@ -18,7 +18,8 @@ from src.cli.cli_app import print_help
 console = Console()
 logger = Logger()
 
-@click.group(context_settings=dict(help_option_names=[]))
+# Modificando o grupo principal para não exigir subcomandos
+@click.group(invoke_without_command=True, context_settings=dict(help_option_names=[]))
 @click.version_option(version="1.0.0", prog_name="OnlyFiles")
 @click.option('--help', '-h', is_flag=True, help='Show this help message')
 @click.option('--directory', '-d', type=click.Path(exists=True, file_okay=False, dir_okay=True), help='Directory to work with')
@@ -32,7 +33,8 @@ logger = Logger()
 @click.option('--drives', '-v', is_flag=True, help='List available drives')
 @click.option('--logs', '-l', is_flag=True, help='View operation logs')
 @click.option('--clear-logs', '-c', is_flag=True, help='Clear operation logs')
-def cli(help: bool = False, directory: Optional[str] = None, extension: bool = False, date: bool = False, size: bool = False, 
+@click.pass_context
+def cli(ctx, help: bool = False, directory: Optional[str] = None, extension: bool = False, date: bool = False, size: bool = False, 
         type: bool = False, backup: bool = False, revert: bool = False, move: bool = False, 
         drives: bool = False, logs: bool = False, clear_logs: bool = False):
     """
@@ -46,14 +48,14 @@ def cli(help: bool = False, directory: Optional[str] = None, extension: bool = F
     - Drive listing
     - Log management
     """
-    # If help option is provided, print custom help and exit
-    if help:
+    # Se nenhum comando foi fornecido ou --help foi especificado, mostrar a ajuda personalizada
+    if ctx.invoked_subcommand is None or help:
         print_help()
-        sys.exit(0)
+        return
         
-    # If no options were provided and no command was specified, show help
+    # Verifique se alguma opção foi fornecida
     if not any([extension, date, size, type, backup, revert, move, drives, logs, clear_logs]):
-        # Show custom help message
+        # Nenhuma opção fornecida, mostrar ajuda
         print_help()
         return
 

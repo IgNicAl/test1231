@@ -1,2 +1,0 @@
-[console_scripts]
-onlyfiles = onlyfiles.main:cli

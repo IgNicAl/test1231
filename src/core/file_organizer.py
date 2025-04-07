@@ -216,19 +216,22 @@ class FileOrganizer:
         return FileOrganizer.organize_by_type(directory)
         
     @staticmethod
-    def revert_last_organization() -> bool:
+    def revert_last_organization(directory: Optional[str] = None) -> bool:
         """
         Revert the last organization operation by moving files back to their original locations.
         
+        Args:
+            directory: Directory to revert organization, defaults to current directory
+            
         Returns:
             bool: True if reverted successfully, False otherwise
         """
         try:
-            # Get the current directory
-            current_dir = os.getcwd()
+            # Get the target directory
+            target_dir = directory if directory and os.path.exists(directory) else os.getcwd()
             
-            # Get all subdirectories in the current directory
-            subdirs = [d for d in os.listdir(current_dir) if os.path.isdir(os.path.join(current_dir, d))]
+            # Get all subdirectories in the target directory
+            subdirs = [d for d in os.listdir(target_dir) if os.path.isdir(os.path.join(target_dir, d))]
             
             # Skip if no subdirectories (nothing to revert)
             if not subdirs:
@@ -236,12 +239,20 @@ class FileOrganizer:
             
             # Move files from each subdirectory back to the parent directory
             for subdir in subdirs:
-                subdir_path = os.path.join(current_dir, subdir)
+                subdir_path = os.path.join(target_dir, subdir)
                 files = os.listdir(subdir_path)
                 
                 for file in files:
                     source = os.path.join(subdir_path, file)
-                    destination = os.path.join(current_dir, file)
+                    destination = os.path.join(target_dir, file)
+                    
+                    # Check if destination file already exists
+                    if os.path.exists(destination):
+                        # Append a unique identifier to avoid overwriting
+                        base, ext = os.path.splitext(file)
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        new_filename = f"{base}_{timestamp}{ext}"
+                        destination = os.path.join(target_dir, new_filename)
                     
                     # Move file back to parent directory
                     shutil.move(source, destination)

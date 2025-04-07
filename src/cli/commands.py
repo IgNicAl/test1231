@@ -3,20 +3,24 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from typing import Optional
+import sys
 
-from ..core.file_operations import FileOperations
-from ..core.drive_operations import DriveOperations
-from ..core.file_organizer import FileOrganizer
-from ..utils.logging import Logger
-from ..utils.path_utils import PathUtils
-from .cli_app import print_help
+from src.utils.logging import Logger
+from src.utils.file_navigator import FileNavigator
+from src.utils.path_utils import PathUtils
+from src.core.file_organizer import FileOrganizer
+from src.core.file_operations import FileOperations
+from src.core.drive_operations import DriveOperations
+from src.cli.cli_app import print_help
+
 
 # Initialize console and logger
 console = Console()
 logger = Logger()
 
-@click.group()
+@click.group(context_settings=dict(help_option_names=[]))
 @click.version_option(version="1.0.0", prog_name="OnlyFiles")
+@click.option('--help', '-h', is_flag=True, help='Show this help message')
 @click.option('--directory', '-d', type=click.Path(exists=True, file_okay=False, dir_okay=True), help='Directory to work with')
 @click.option('--extension', '-e', is_flag=True, help='Organize by extension')
 @click.option('--date', '-t', is_flag=True, help='Organize by date')
@@ -28,8 +32,9 @@ logger = Logger()
 @click.option('--drives', '-v', is_flag=True, help='List available drives')
 @click.option('--logs', '-l', is_flag=True, help='View operation logs')
 @click.option('--clear-logs', '-c', is_flag=True, help='Clear operation logs')
-def cli(directory: str, extension: bool, date: bool, size: bool, type: bool, 
-        backup: bool, revert: bool, move: bool, drives: bool, logs: bool, clear_logs: bool):
+def cli(help: bool = False, directory: Optional[str] = None, extension: bool = False, date: bool = False, size: bool = False, 
+        type: bool = False, backup: bool = False, revert: bool = False, move: bool = False, 
+        drives: bool = False, logs: bool = False, clear_logs: bool = False):
     """
     Main CLI command group for OnlyFiles.
     
@@ -41,7 +46,14 @@ def cli(directory: str, extension: bool, date: bool, size: bool, type: bool,
     - Drive listing
     - Log management
     """
+    # If help option is provided, print custom help and exit
+    if help:
+        print_help()
+        sys.exit(0)
+        
+    # If no options were provided and no command was specified, show help
     if not any([extension, date, size, type, backup, revert, move, drives, logs, clear_logs]):
+        # Show custom help message
         print_help()
         return
 
@@ -69,12 +81,12 @@ def cli(directory: str, extension: bool, date: bool, size: bool, type: bool,
         if not directory:
             console.print("[red]Directory (-d) is required for revert operation[/red]")
             return
-        if FileOperations.revert_to_backup(directory):
-            console.print(f"[green]File {directory} reverted successfully[/green]")
-            logger.info(f"File {directory} reverted to backup")
+        if FileOrganizer.revert_last_organization(directory):
+            console.print(f"[green]Organization in {directory} reverted successfully[/green]")
+            logger.info(f"Organization in {directory} reverted")
         else:
-            console.print(f"[red]Failed to revert {directory}[/red]")
-            logger.error(f"Failed to revert {directory}")
+            console.print(f"[red]Failed to revert organization in {directory}[/red]")
+            logger.error(f"Failed to revert organization in {directory}")
 
     # Handle file movement operations
     if move:
@@ -107,11 +119,10 @@ def cli(directory: str, extension: bool, date: bool, size: bool, type: bool,
 
     # Handle log viewing operations
     if logs:
-        log_entries = logger.get_logs()
-        if log_entries:
+        log_content = logger.get_logs()
+        if log_content:
             console.print("\n=== Operation Logs ===\n")
-            for entry in log_entries:
-                console.print(entry.strip())
+            console.print(log_content)
             console.print("\n=== End of Logs ===\n")
         else:
             console.print("[yellow]No logs found[/yellow]")
@@ -122,6 +133,14 @@ def cli(directory: str, extension: bool, date: bool, size: bool, type: bool,
             console.print("[green]Logs cleared successfully[/green]")
         else:
             console.print("[red]Failed to clear logs[/red]")
+
+# Adicionar o comando 'start'
+@cli.command()
+def start():
+    """Start the interactive terminal interface."""
+    from src.cli.terminal_interface import TerminalInterface
+    interface = TerminalInterface()
+    interface.start()
 
 def _display_organization_results(title: str, organized_files: dict):
     """

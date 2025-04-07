@@ -1,6 +1,5 @@
 import platform
 from typing import List
-from ctypes import windll
 
 class DriveOperations:
     """Handles drive-related operations in a clean and organized way."""
@@ -20,6 +19,9 @@ class DriveOperations:
     @staticmethod
     def _get_windows_drives() -> List[str]:
         """Get available drives on Windows system."""
+        # Import windll only when on Windows
+        from ctypes import windll
+        
         drives = []
         bitmask = windll.kernel32.GetLogicalDrives()
         

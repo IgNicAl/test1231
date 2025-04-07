@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from rich.table import Table
 from rich.console import Console
 
@@ -8,7 +8,7 @@ console = Console()
 
 class FileNavigator:
     def __init__(self):
-        self.current_path = None
+        pass
 
     def get_available_drives(self) -> List[str]:
         """Returns list of available drives on Windows or root on Linux."""
@@ -37,6 +37,12 @@ class FileNavigator:
                     index += 1
             
             return items
+        except PermissionError:
+            console.print(f"[red]Permission denied: Cannot access {path}[/red]")
+            return []
+        except FileNotFoundError:
+            console.print(f"[red]Directory not found: {path}[/red]")
+            return []
         except Exception as e:
             console.print(f"[red]Error listing directory: {str(e)}[/red]")
             return []
@@ -58,7 +64,7 @@ class FileNavigator:
             except (ValueError, IndexError):
                 console.print("[red]Invalid option![/red]")
 
-    def display_directory(self, path: str) -> Table:
+    def display_directory(self, path: str) -> None:
         """Shows directory contents in a formatted table."""
         items = self.list_directory(path)
         
@@ -79,8 +85,13 @@ class FileNavigator:
         console.print("- Enter 'B' to go back")
         console.print("- Enter 'C' to cancel")
 
-    def navigate(self) -> str:
-        """Starts interactive navigation and returns the selected path."""
+    def navigate(self) -> Optional[str]:
+        """
+        Starts interactive navigation and returns the selected path.
+        
+        Returns:
+            Optional[str]: Selected directory path, or None if operation is cancelled
+        """
         # First, select the drive
         current_path = self.display_drives()
         
@@ -95,9 +106,10 @@ class FileNavigator:
             choice = input("\nChoose an option: ").strip().upper()
             
             if choice == 'C':
+                console.print("[yellow]Operation cancelled by user.[/yellow]")
                 return None
             elif choice == 'S':
-                # Apenas retorna o caminho selecionado, sem tentar organizar
+                # Return the selected path
                 return current_path
             elif choice == 'B':
                 parent = str(Path(current_path).parent)
@@ -109,15 +121,9 @@ class FileNavigator:
                 if choice.isdigit():
                     choice_idx = int(choice) - 1  # Convert to 0-based index
                     
-                    # Debug information
-                    console.print(f"[dim]Debug: Selected index {choice_idx}, Total items: {len(items)}[/dim]")
-                    
                     if 0 <= choice_idx < len(items):
                         selected = items[choice_idx][1]  # Get folder name from tuple
                         new_path = os.path.join(current_path, selected)
-                        
-                        # Debug information
-                        console.print(f"[dim]Debug: Selected folder: {selected}, New path: {new_path}[/dim]")
                         
                         if os.path.isdir(new_path):
                             current_path = new_path

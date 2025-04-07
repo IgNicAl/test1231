@@ -9,14 +9,14 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 setup(
     name="onlyfiles",
     version="1.0.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Grupo 05 - OnlyFiles",
+    author_email="",
     description="A powerful file management and backup CLI tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/onlyfiles",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    url="https://github.com/MichaelBittencourt/OnlyFiles",
+    packages=find_packages(include=["src", "src.*"]),
+    package_dir={"": "."},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: End Users/Desktop",
@@ -32,7 +32,7 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "onlyfiles=onlyfiles.cli:cli",
+            "onlyfiles=src.cli.commands:cli",
         ],
     },
 ) 

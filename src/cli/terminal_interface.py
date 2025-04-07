@@ -2,18 +2,19 @@ import os
 import sys
 from rich.console import Console
 from rich.panel import Panel
-from ..core.file_organizer import FileOrganizer
-from ..utils.logging import Logger
-from ..utils.file_navigator import FileNavigator
-from .. import __version__
+from src.core.file_organizer import FileOrganizer
+from src.utils.logging import Logger
+from src.utils.file_navigator import FileNavigator
+from src.core.file_operations import FileOperations
 
 console = Console()
 logger = Logger()
 
 class TerminalInterface:
+    """Provides a terminal-based user interface for file organization operations."""
+    
     def __init__(self):
         self.current_path = os.getcwd()
-        self.organizer = FileOrganizer()
         self.navigator = FileNavigator()
 
     def clear_screen(self):
@@ -24,8 +25,7 @@ class TerminalInterface:
         """Displays the application header."""
         console.print(Panel.fit(
             "[bold blue]File Organizer[/bold blue]",
-            title="Version",
-            subtitle=f"Version: {__version__}",
+            title="File Organizer",
             border_style="blue"
         ))
 
@@ -105,7 +105,7 @@ class TerminalInterface:
         """Reverts the last organization."""
         try:
             console.print("\n[bold]Reverting last organization...[/bold]")
-            if FileOrganizer.revert_last_organization():
+            if FileOrganizer.revert_last_organization(self.current_path):
                 console.print("[green]Organization reverted successfully![/green]")
                 logger.info("Organization reverted successfully")
             else:

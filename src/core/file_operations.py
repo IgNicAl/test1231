@@ -7,50 +7,58 @@ class FileOperations:
     """Handles all file-related operations in a clean and organized way."""
     
     @staticmethod
-    def create_backup(file_path: str) -> bool:
+    def create_backup(path: str) -> bool:
         """
-        Create a backup of the specified file with timestamp.
+        Create a backup of the specified file or directory with timestamp.
         
         Args:
-            file_path: Path to the file to backup
+            path: Path to the file or directory to backup
             
         Returns:
             bool: True if backup was successful, False otherwise
         """
-        if not os.path.exists(file_path):
+        if not os.path.exists(path):
             return False
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = f"{file_path}.backup_{timestamp}"
+        backup_path = f"{path}.backup_{timestamp}"
         
         try:
-            shutil.copy2(file_path, backup_path)
+            if os.path.isfile(path):
+                shutil.copy2(path, backup_path)
+            else:
+                shutil.copytree(path, backup_path)
             return True
         except Exception:
             return False
     
     @staticmethod
-    def revert_to_backup(file_path: str) -> bool:
+    def revert_to_backup(path: str) -> bool:
         """
-        Revert file to its most recent backup.
+        Revert file or directory to its most recent backup.
         
         Args:
-            file_path: Path to the file to revert
+            path: Path to the file or directory to revert
             
         Returns:
             bool: True if revert was successful, False otherwise
         """
-        if not os.path.exists(file_path):
+        if not os.path.exists(path):
             return False
         
-        backups = FileOperations._get_backup_files(file_path)
+        backups = FileOperations._get_backup_files(path)
         if not backups:
             return False
         
         latest_backup = max(backups, key=lambda x: os.path.getctime(x))
         
         try:
-            shutil.copy2(latest_backup, file_path)
+            if os.path.isfile(path):
+                shutil.copy2(latest_backup, path)
+            else:
+                # Remove existing directory and replace with backup
+                shutil.rmtree(path)
+                shutil.copytree(latest_backup, path)
             return True
         except Exception:
             return False
@@ -91,12 +99,20 @@ class FileOperations:
         return moved_files
     
     @staticmethod
-    def _get_backup_files(file_path: str) -> List[str]:
-        """Get list of backup files for a given file path."""
-        directory = os.path.dirname(file_path)
-        filename = os.path.basename(file_path)
+    def _get_backup_files(path: str) -> List[str]:
+        """
+        Get list of backup files for a given file or directory path.
+        
+        Args:
+            path: Path to the file or directory
+            
+        Returns:
+            List[str]: List of backup file/directory paths
+        """
+        directory = os.path.dirname(path)
+        name = os.path.basename(path)
         return [
             os.path.join(directory, f) 
             for f in os.listdir(directory) 
-            if f.startswith(filename + ".backup_")
+            if f.startswith(name + ".backup_")
         ] 

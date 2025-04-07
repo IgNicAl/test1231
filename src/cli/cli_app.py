@@ -1,47 +1,31 @@
 import sys
-from onlyfiles.cli.terminal_interface import TerminalInterface
+import os
+from pathlib import Path
+from src.cli.terminal_interface import TerminalInterface
 
 def print_help():
     """
     Print a formatted help message.
     
     This function displays the main help text with all available commands and options.
+    The text is loaded from a separate file for easier maintenance.
     """
-    help_text = """
-OnlyFiles - A powerful file management and backup CLI tool
-
-Usage:
-    onlyfiles <command> [options]
-
-Commands:
-    start           Launch the interactive terminal interface
-    --help, -h      Show this help message
-    --version, -v   Show version information
-
-Options:
-    -d, --directory PATH    Directory to work with
-    -e, --extension        Organize files by extension
-    -t, --date            Organize files by date
-    -s, --size            Organize files by size
-    -y, --type            Organize files by type
-    -b, --backup          Create backup of files
-    -r, --revert          Revert to last backup
-    -m, --move            Move files
-    -v, --drives          List available drives
-    -l, --logs            View operation logs
-    -c, --clear-logs      Clear operation logs
-
-Examples:
-    onlyfiles start     # Start the interactive terminal interface
-    onlyfiles --help    # Show this help message
-    onlyfiles --version # Show version information
-    onlyfiles -d /path/to/directory -e  # Organize files by extension in specified directory
-    onlyfiles -b -d /path/to/directory  # Create backup of files in specified directory
-    onlyfiles -l                        # View operation logs
-
-For more information, visit: https://github.com/MichaelBittencourt/OnlyFiles
-"""
-    print(help_text)
+    # Determinar o caminho do arquivo de ajuda
+    help_file_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+        "resources", 
+        "help_text.txt"
+    )
+    
+    try:
+        # Tentar ler o arquivo de ajuda
+        with open(help_file_path, "r", encoding="utf-8") as help_file:
+            help_text = help_file.read()
+        print(help_text)
+    except Exception as e:
+        # Fallback para o caso do arquivo não existir ou não puder ser lido
+        print(f"Erro ao carregar o arquivo de ajuda: {str(e)}")
+        print("Para mais informações, visite: https://github.com/MichaelBittencourt/OnlyFiles")
 
 def main():
     """
@@ -52,8 +36,11 @@ def main():
     if len(sys.argv) == 1 or "--help" in sys.argv or "-h" in sys.argv:
         print_help()
         sys.exit(0)
-    elif "--version" in sys.argv or "-v" in sys.argv:
-        from onlyfiles import __version__
+    elif "--version" in sys.argv:
+        try:
+            from src import __version__
+        except ImportError:
+            __version__ = "unknown"
         print(f"OnlyFiles version {__version__}")
         sys.exit(0)
     elif len(sys.argv) > 1 and sys.argv[1] == "start":
